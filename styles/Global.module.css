@@ -1,0 +1,161 @@
+:root {
+  --main: rgb(70, 20, 88);
+  --sub: rgb(129, 30, 165);
+  --reachBlue: rgba(0, 204, 255);
+  --reachRed: rgb(239, 34, 34);
+  --reachGray: rgb(53, 53, 53);
+  --reachWhite: rgb(209, 209, 209);
+  --boxShadow: 0 0 10px 0 rgba(0, 204, 255, 0.4);
+  --boxShadowMag: 0 0 10px 0 rgba(255, 0, 238, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+*:not(body) {
+  transition: all 0.3s;
+}
+
+body {
+  /* font-family: Arial, Helvetica, sans-serif !important; */
+  font-family: "Lucida Console", "Courier New", monospace !important;
+  margin: 0;
+  padding: 0;
+  color: var(--reachWhite);
+  background-color: rgb(0, 0, 0);
+}
+
+/* -----------------App------------------- */
+.mainHeader {
+  text-align: center;
+  font-size: 50px;
+  color: rgb(255, 255, 255);
+  padding: 40px 10px;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  width: 100%;
+  margin: 0;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  margin: 0;
+  gap: 10px;
+  padding: 20px 10px 10px;
+  /* background-color:#000; */
+}
+
+/* -----------------Wrapper------------------- */
+.theme {
+  text-align: center;
+  width: 100%;
+  margin-bottom: 0;
+  padding: 5px;
+}
+
+.subTheme {
+  text-align: center;
+  width: 100%;
+  color: var(--sub);
+  margin-bottom: 0;
+  padding: 5px;
+}
+
+/* -----------------View------------------- */
+.subContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-wrap: wrap;
+  width: max(70%, 350px);
+  margin: 0;
+  gap: 10px;
+  padding: 20px 10px 10px;
+  border-radius: 10px;
+  border: 2px solid var(--reachBlue);
+}
+
+.orderContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  margin: 0;
+  gap: 10px;
+  padding: 10px 5px;
+}
+
+.littleText {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+}
+
+.miniHeader {
+  width: 100%;
+  text-align: center;
+}
+
+.actionButton {
+  padding: 5px;
+  font-family: "Lucida Console", "Courier New", monospace !important;
+  color: var(--reachBlue);
+  background-color: transparent;
+  border: 0;
+  border-radius: 5px;
+  font-weight: 600;
+  border: 1px solid var(--reachBlue);
+}
+
+.actionButton:hover {
+  color: #000;
+  background-color: var(--reachBlue);
+  transform: scale(1.05, 1.05);
+  box-shadow: var(--boxShadow);
+}
+
+.fields {
+  padding: 5px;
+  display: inline-block;
+  width: 100%;
+  font-size: 16px;
+  background-color: transparent;
+  border: 0;
+  color: var(--reachBlue);
+  border-bottom: 2px solid var(--reachRed);
+  outline: none;
+}
+
+.fingerContainer {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.finger {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 5px;
+  color: rgb(255, 0, 238);
+  border: 1px solid rgb(255, 0, 238);
+  background-color: transparent;
+}
+
+.finger:hover {
+  box-shadow: var(--boxShadowMag);
+  transform: scale(1.05, 1.05);
+}
