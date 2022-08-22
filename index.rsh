@@ -21,10 +21,9 @@ const winner = (winningTicket, pickedTicket) => {
 export const main = Reach.App(() => {
 
   const Deployer = Participant('Deployer', {
-    ...hasRandom,
     deadline: UInt,
     setPaymentAmount: Fun([], UInt),
-    genTickets: Fun([], tickets),
+    genTickets: Fun([UInt], tickets),
     genWinningTicket: Fun([tickets], ticketIndex),
     pickATicket: Fun([], ticketIndex),
   });
@@ -42,7 +41,7 @@ export const main = Reach.App(() => {
 
   Deployer.only(() => {
     const deadline = declassify(interact.deadline);
-    const generatedTickets = declassify(interact.genTickets());
+    const generatedTickets = declassify(interact.genTickets(numOfTickets));
     const winningIndex = declassify(interact.genWinningTicket(generatedTickets));
     const paymentAmount = declassify(interact.setPaymentAmount());
   });
@@ -59,18 +58,12 @@ export const main = Reach.App(() => {
     playerCount
   ] = parallelReduce([LOST, Deployer, balance(), 0])
     .invariant(balance() == currentBalance)
-    .while(keepGoing())
+    .while(keepGoing() && playerCount < 5)
     .api_(Players.drawATicket, () => {
       return [paymentAmount,
         (notify) => {
-          commit();
-          Deployer.only(() => {
-            const newTicketIndex = declassify(interact.pickATicket());
-          });
-          Deployer.publish(newTicketIndex);
-          require(newTicketIndex < 5, 'Array index out of bounds');
-          const ticketNumber = generatedTickets[newTicketIndex];
-          const winningNumber = generatedTickets[winningIndex];
+          const ticketNumber = generatedTickets[playerCount];
+          const winningNumber = generatedTickets[(winningIndex > 4 ? 0 : winningIndex)];
           const isWinner = winner(winningNumber, ticketNumber) ? WON : LOST;
           const currentHolder = isWinner ? this : currentOwner;
           notify(ticketNumber);
@@ -88,20 +81,15 @@ export const main = Reach.App(() => {
           tOutcome,
           tCurrentOwner,
           tCurrentBalance,
-          tPlayerCount,
+          tPlayerCount
         ] = parallelReduce([outcome, currentOwner, currentBalance, playerCount])
           .invariant(balance() == tCurrentBalance)
           .while(tPlayerCount < 5)
           .api_(Players.drawATicket, () => {
             return [increasedPayment,
               (notify) => {
-                commit();
-                Deployer.only(() => {
-                  const newTicketIndex = declassify(interact.pickATicket());
-                });
-                Deployer.publish(newTicketIndex);
-                const ticketNumber = generatedTickets[newTicketIndex];
-                const winningNumber = generatedTickets[winningIndex];
+                const ticketNumber = generatedTickets[tPlayerCount];
+                const winningNumber = generatedTickets[(winningIndex > 4 ? 0 : winningIndex)];
                 const isWinner = winner(winningNumber, ticketNumber) ? WON : LOST;
                 const currentHolder = isWinner ? this : tCurrentOwner;
                 notify(ticketNumber);
@@ -113,14 +101,14 @@ export const main = Reach.App(() => {
           tOutcome,
           tCurrentOwner,
           tCurrentBalance,
-          tPlayerCount,
+          tPlayerCount
         ];
       } else {
         return [
           outcome,
           currentOwner,
           currentBalance,
-          playerCount,
+          playerCount
         ];
       }
     });
