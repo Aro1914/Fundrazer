@@ -21,8 +21,7 @@ const winner = (winningTicket, pickedTicket) => {
 export const main = Reach.App(() => {
 
   const Deployer = Participant('Deployer', {
-    deadline: UInt,
-    setPaymentAmount: Fun([], UInt),
+    setContractTerms: Fun([], Array(UInt, 2)),
     genTickets: Fun([UInt], tickets),
     genWinningTicket: Fun([tickets], ticketIndex),
   });
@@ -33,22 +32,25 @@ export const main = Reach.App(() => {
 
   const Logger = Events({
     log: [state],
-    announce: [UInt],
+    notify: [Address, UInt],
+    announce: [Address, UInt],
   });
 
   init();
+  Deployer.publish();
+  Logger.log(state.pad("initiating"));
 
   Deployer.only(() => {
-    const deadline = declassify(interact.deadline);
+    const [deadline, paymentAmount] = declassify(interact.setContractTerms());
     const generatedTickets = declassify(interact.genTickets(numOfTickets));
     const winningIndex = declassify(interact.genWinningTicket(generatedTickets));
-    const paymentAmount = declassify(interact.setPaymentAmount());
   });
   Deployer.publish(deadline, generatedTickets, winningIndex, paymentAmount);
   commit();
   Deployer.publish();
 
   const [timeRemaining, keepGoing] = makeDeadline(deadline);
+  Logger.log(state.pad("opened"));
 
   const [
     outcome,
@@ -66,12 +68,14 @@ export const main = Reach.App(() => {
           const isWinner = winner(winningNumber, ticketNumber) ? WON : LOST;
           const currentHolder = isWinner ? this : currentOwner;
           notify(ticketNumber);
+          Logger.notify(this, ticketNumber);
           return [isWinner, currentHolder, currentBalance + paymentAmount, playerCount + 1];
         }
       ];
     })
     .timeout(timeRemaining(), () => {
       Deployer.publish();
+      Logger.log(state.pad("timeout"));
       if (playerCount < 5) {
         commit();
         Deployer.publish();
@@ -92,6 +96,7 @@ export const main = Reach.App(() => {
                 const isWinner = winner(winningNumber, ticketNumber) ? WON : LOST;
                 const currentHolder = isWinner ? this : tCurrentOwner;
                 notify(ticketNumber);
+                Logger.notify(this, ticketNumber);
                 return [isWinner, currentHolder, tCurrentBalance + increasedPayment, tPlayerCount + 1];
               }
             ];
@@ -111,7 +116,11 @@ export const main = Reach.App(() => {
         ];
       }
     });
+  Logger.log(state.pad("closed"));
+  Logger.announce(currentOwner, generatedTickets[(winningIndex > 4 ? 0 : winningIndex)]);
   transfer(balance()).to(currentOwner);
+  Logger.log(state.pad("complete"));
+  Logger.log(state.pad("closing"));
   commit();
   exit();
 });
