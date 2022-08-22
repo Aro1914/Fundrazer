@@ -35,7 +35,9 @@ const ReachContextProvider = ({ children }) => {
     const [resolvePaymentAmount, setResolvePaymentAmount] = useState({});
     const [who, setWho] = useState("");
 
-    const [contract, setContract] = useState(null);
+    const [contractInfo, setContractInfo] = useState(null);
+    const [deployerContract, setDeployerContract] = useState('');
+    const [attacherContract, setAttacherContract] = useState('');
 
     const [resolveAcceptTerms, setResolveAcceptTerms] = useState({});
 
@@ -68,24 +70,6 @@ const ReachContextProvider = ({ children }) => {
         setViews({ view: "SetWager", wrapper: "DeployerWrapper" });
     };
 
-    // const pickAndGuess = async () => {
-    //     const choices = await new Promise((resolveChoices) => {
-    //         setResolveChoices({ resolveChoices });
-    //         setPlayable(true);
-    //         setViews({ view: "PickAndGuess", wrapper: "AppWrapper" });
-    //     });
-    //     setChoices(choices);
-    //     console.log(choices);
-
-    //     setViews({ view: "WaitingForResults", wrapper: "AppWrapper" });
-    //     return [...choices];
-    // };
-
-    // const makeDecision = (fingers, guess) => {
-    //     setFirstTurn(false);
-    //     resolveChoices.resolveChoices([fingers, guess]);
-    // };
-
     const declareWinner = () => {
         setViews({ view: "Done", wrapper: "AppWrapper" });
     };
@@ -96,48 +80,58 @@ const ReachContextProvider = ({ children }) => {
 
     const setPaymentAmount = async () => {
         const fixedAmount = await new Promise((resolvePaymentAmount) => {
-            setViews({ view: 'SetRaffleAmount', wrapper: 'DeployerWrapper' });
+            setViews({ view: 'SetTicketPrice', wrapper: 'DeployerWrapper' });
+            setResolvePaymentAmount({ resolvePaymentAmount });
         });
-        setAmount(fixedAmount);
         console.log(amount, fixedAmount);
         return fixedAmount;
+    };
+
+    const handlePaymentAmount = () => {
+        resolvePaymentAmount.resolvePaymentAmount(amount);
+        setViews({ view: 'Participants', wrapper: 'DeployerWrapper' });
     };
 
     const genTickets = (num) => {
         const tickets = [];
         let counts = 0;
-        while (counts < 4) {
-            const ticket = Math.floor(Math.random() * 10000) + 10001;
+        while (counts < num) {
+            let ticket = Math.floor(Math.random() * 10000) + 10001;
+            while (tickets.includes(ticket))
+                ticket = Math.floor(Math.random() * 10000) + 10001;
             tickets.push(ticket);
-            counts
+            counts++;
         }
         return tickets;
     };
 
-    console.log(genTickets(5));
+    const genWinningTicket = (tickets) => {
+        return Math.floor(Math.random() * tickets.length);
+    };
 
     const DeployerInteract = {
         deadline,
         setPaymentAmount,
         genTickets,
-        genWinningTicket,
-        pickATicket,
+        genWinningTicket
     };
 
     const deploy = async () => {
         const ctc = user.account.contract(backend);
         setViews({ view: "Deploying", wrapper: "DeployerWrapper" });
-        ctc.p.Alice(DeployerInteract);
+        setDeployerContract(ctc);
+        ctc.p.Deployer(DeployerInteract);
         const ctcInfoStr = JSON.stringify(await ctc.getInfo(), null, 2);
         console.log(ctcInfoStr);
-        setContract({ ctcInfoStr });;
-        setViews({ view: "WaitingForAttacher", wrapper: "DeployerWrapper" });
+        setContractInfo({ ctcInfoStr });
     };
 
     const attach = async (ctcInfoStr) => {
         try {
-            const ctc = user.account.contract(backend, JSON.parse(ctcInfoStr));
             setViews({ view: "Attaching", wrapper: "AttacherWrapper" });
+            const ctc = user.account.contract(backend, JSON.parse(ctcInfoStr));
+            setAttacherContract(ctc);
+            setViews({ view: 'Terms', wrapper: 'AttacherWrapper' });
         } catch (error) {
             console.log({ error });
         }
@@ -145,19 +139,31 @@ const ReachContextProvider = ({ children }) => {
 
     const termsAccepted = () => {
         resolveAcceptTerms.resolveAcceptTerms();
-        setViews({ view: "WaitingForTurn" });
+        setViews({ view: "BuyTicket", wrapper: 'AttacherWrapper' });
+    };
+
+    const buyTicket = async () => {
+        try {
+            await attacherContract.apis.Players.drawATicket();
+            setViews({ view: 'Participants', wrapper: 'AttacherWrapper' });
+        } catch (error) {
+            alert(`An error occurred`);
+        }
     };
 
     const ReachContextValues = {
         ...defaults,
 
-        contract,
+        contract: contractInfo,
 
         user,
         views,
         fundAccount,
         connectAccount,
         skipFundAccount,
+
+        declareWinner,
+        informTimeout,
 
         selectDeployer,
         selectAttacher,
@@ -167,6 +173,8 @@ const ReachContextProvider = ({ children }) => {
         deploy,
         attach,
         termsAccepted,
+        handlePaymentAmount,
+        buyTicket,
     };
 
     return (

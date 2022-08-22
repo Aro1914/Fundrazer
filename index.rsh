@@ -25,7 +25,6 @@ export const main = Reach.App(() => {
     setPaymentAmount: Fun([], UInt),
     genTickets: Fun([UInt], tickets),
     genWinningTicket: Fun([tickets], ticketIndex),
-    pickATicket: Fun([], ticketIndex),
   });
 
   const Players = API('Players', {

@@ -7,7 +7,7 @@ const Deploy = () => {
 
     return (
         <div className={ useClasses(styles.subContainer) }>
-            <h3 className={ useClasses() }>Wager: <strong>{ wager }</strong> { standardUnit }(required to deploy)</h3>
+            <h3 className={ useClasses() }>Ticket Price: <strong>{ wager }</strong> { standardUnit }(required to deploy)</h3>
             <div className={ useClasses() }>
             <button
                 className={ useClasses(styles.actionButton) }
