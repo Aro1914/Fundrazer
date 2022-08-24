@@ -182,7 +182,15 @@ const ReachContextProvider = ({ children }) => {
     const announce = async ({ when, what }) => {
         await sleep(5000);
         await alertThis(`Congrats, user with ticket number ${what[1]}, you just won half the pot!`);
-        what[2] ? await alertThis(`'The next round would begin shortly'`) : await alertThis(`The targeted amount has been raised, transferring contract balance of ${balance} ${standardUnit} to deployer and closing contract`);
+
+        if (what[2]) {
+            await sleep(5000);
+            await alertThis(`The next round would begin shortly`);
+        } else {
+            await sleep(5000);
+            await alertThis(`The targeted amount has been raised, transferring contract balance of ${reach.formatCurrency(what[3], 4)} ${standardUnit} to deployer and closing contract`);
+        }
+
         setIsConcluded(true);
         setCanContinue(what[2]);
         const id = winners.length + 1;
