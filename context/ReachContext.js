@@ -102,6 +102,7 @@ const ReachContextProvider = ({ children }) => {
     };
 
     const selectAttacher = () => {
+        setIsDeployer(false);
         setViews({ view: "Attach", wrapper: "AppWrapper" });
     };
 
@@ -167,7 +168,7 @@ const ReachContextProvider = ({ children }) => {
 
     const announce = async ({ when, what }) => {
         await sleep(5000);
-        await alertThis(`Congrats, user with address ${what[0]}, and ticket number ${what[1]}, just won half the pot!`);
+        await alertThis(`Congrats, user with ticket number ${what[1]}, you just won half the pot!`);
         setIsConcluded(true);
         const id = winners.length + 1;
         const newWinners = winners;
@@ -365,6 +366,19 @@ const ReachContextProvider = ({ children }) => {
                 </div>
             }
             { children }
+            { user.account &&
+                <div className={ fmtClasses(
+                    styles.last
+                ) }>
+                    <button className={ fmtClasses(
+                        styles.back
+                    ) }
+                        onClick={ () => { setViews({ view: "DeployerOrAttacher", wrapper: "AppWrapper" }); }
+                        }>
+                        Select Roles
+                    </button>
+                </div>
+            }
         </ReachContext.Provider>
     );
 };

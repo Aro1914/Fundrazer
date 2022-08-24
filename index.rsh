@@ -139,7 +139,7 @@ export const main = Reach.App(() => {
     if (balance() >= amtCont / 2) {
       transfer(amtCont / 2).to(currentOwner);
     }
-    Logger.log(state.pad("complete"), balance() < target);
+    Logger.log(state.pad("complete"), (balance() < target ? true : false));
     Logger.balance(totalGathered + (amtCont / 2));
 
     [rounds, currentBal, totalGathered] = [(rounds + 1), balance(), totalGathered + (amtCont / 2)];

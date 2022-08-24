@@ -26,6 +26,10 @@ body {
   background-color: rgb(0, 0, 0);
 }
 
+button {
+  cursor: pointer !important;
+}
+
 /* -----------------App------------------- */
 .mainHeader {
   text-align: center;
@@ -226,4 +230,23 @@ body {
 
 .cancel:hover {
   transform: scale(2, 2);
+}
+
+.last {
+  position: sticky;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.back {
+  background-color: #000;
+  padding: 5px;
+  font-size:16px;
+  border-bottom: 0.5px solid var(--reachBlue);
+  color: var(--reachBlue);
+  border-radius: 5px;
 }
