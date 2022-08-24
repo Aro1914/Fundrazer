@@ -135,12 +135,10 @@ export const main = Reach.App(() => {
           ];
         }
       });
-    Logger.log(state.pad("closed"), false);
     Logger.announce(currentOwner, generatedTickets[(winningIndex > 4 ? 0 : winningIndex)]);
     if (balance() >= amtCont / 2) {
       transfer(amtCont / 2).to(currentOwner);
     }
-    // transfer(balance()).to(Deployer);
     Logger.log(state.pad("complete"), balance() < target);
     Logger.balance(totalGathered + (amtCont / 2));
 

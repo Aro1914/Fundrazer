@@ -4,7 +4,7 @@ import styles from '../../styles/Proposals.module.css';
 
 
 const Participants = () => {
-    const { participants, sortArrayOfObjects, isConcluded, buyTicket, isDeployer, isOpen, amount, standardUnit, hasPurchased, round, balance, target } = useReach();
+    const { participants, sortArrayOfObjects, isConcluded, buyTicket, isDeployer, isOpen, amount, standardUnit, hasPurchased, round, balance, target, winners } = useReach();
 
     return (
         <div className={ useClasses(
@@ -34,28 +34,29 @@ const Participants = () => {
                     ) }>Ticket Number</span>
                 </div>
                 {
-                    sortArrayOfObjects(participants, 'id').map((el, index) => {
-                        return (
-                            <div key={ index } className={ fmtClasses(
-                                styles.proposal,
-                                isConcluded ? (el.isWinner ? styles.winner : "") : "",
-                            ) }>
-                                <div className={ fmtClasses(
-                                    styles.identifiers,
+                    sortArrayOfObjects(participants, 'id')
+                        .filter(el => el.id > ((round - 1) * 5) && el.id <= ((round) * 5))
+                        .map((el, index) => {
+                            return (
+                                <div key={ index } className={ fmtClasses(
+                                    styles.proposal,
                                 ) }>
+                                    <div className={ fmtClasses(
+                                        styles.identifiers,
+                                    ) }>
+                                        <span className={ fmtClasses(
+                                            styles.time,
+                                        ) }>{ el.time }</span>
+                                        <span className={ fmtClasses(
+                                            styles.address,
+                                        ) }>{ el.address }</span>
+                                    </div>
                                     <span className={ fmtClasses(
-                                        styles.time,
-                                    ) }>{ el.time }</span>
-                                    <span className={ fmtClasses(
-                                        styles.address,
-                                    ) }>{ el.address }</span>
+                                        styles.ticket,
+                                    ) }>{ el.ticket }</span>
                                 </div>
-                                <span className={ fmtClasses(
-                                    styles.ticket,
-                                ) }>{ el.ticket }</span>
-                            </div>
-                        );
-                    })
+                            );
+                        })
                 }
             </div>
             { !hasPurchased &&
@@ -90,6 +91,55 @@ const Participants = () => {
                     ) }>Target: { target }</span>
                 </div>
             }
+            <h1 className={ useClasses(
+                styles.title,
+            ) }>Winners</h1>
+            <div className={ useClasses(
+                styles.proposals,
+            ) }>
+                <div className={ useClasses(
+                    styles.proposal,
+                ) }>
+                    <div className={ useClasses(
+                        styles.identifiers,
+                    ) }>
+                        <span className={ useClasses(
+                            styles.time,
+                        ) }>Consensus Time</span>
+                        <span className={ useClasses(
+                            styles.address,
+                        ) }>Address</span>
+                    </div>
+                    <span className={ useClasses(
+                        styles.ticket,
+                    ) }>Ticket Number</span>
+                </div>
+                {
+                    sortArrayOfObjects(winners, 'id')
+                        .map((el, index) => {
+                            return (
+                                <div key={ index } className={ fmtClasses(
+                                    styles.proposal,
+                                    styles.winner,
+                                ) }>
+                                    <div className={ fmtClasses(
+                                        styles.identifiers,
+                                    ) }>
+                                        <span className={ fmtClasses(
+                                            styles.time,
+                                        ) }>{ el.time }</span>
+                                        <span className={ fmtClasses(
+                                            styles.address,
+                                        ) }>{ el.address }</span>
+                                    </div>
+                                    <span className={ fmtClasses(
+                                        styles.ticket,
+                                    ) }>{ el.ticket }</span>
+                                </div>
+                            );
+                        })
+                }
+            </div>
         </div>
     );
 };

@@ -53,6 +53,7 @@ const ReachContextProvider = ({ children }) => {
     const [attacherContract, setAttacherContract] = useState(null);
     const [resolveAcceptTerms, setResolveAcceptTerms] = useState({});
     const [participants, setParticipants] = useState([]);
+    const [winners, setWinners] = useState([]);
 
     const [message, setMessage] = useState('');
     const [showAlert, setShowAlert] = useState(false);
@@ -111,13 +112,12 @@ const ReachContextProvider = ({ children }) => {
         });
         setTerms(terms);
         console.log(terms);
-
-        setViews({ view: "Participants", wrapper: "AppWrapper" });
         return [terms[0], reach.parseCurrency(terms[1]), reach.parseCurrency(terms[2])];
     };
 
     const finalizeTerms = (deadline, amount, target) => {
         resolveTerms.resolve([deadline, amount, target]);
+        setViews({ view: "Deploying", wrapper: "AppWrapper" });
     };
 
     const genTickets = (num) => {
@@ -161,18 +161,23 @@ const ReachContextProvider = ({ children }) => {
             time: parseInt(when),
             address: what[0],
             ticket: parseInt(what[1]),
-            isWinner: false,
         });
         setParticipants([...newParticipants]);
     };
 
     const announce = async ({ when, what }) => {
         await sleep(5000);
-        await alertThis(`Congratulations, user with address ${what[0]}, the holder of ticket number ${what[1]}, you just won the pot!`);
+        await alertThis(`Congrats, user with address ${what[0]}, and ticket number ${what[1]}, just won half the pot!`);
         setIsConcluded(true);
-        const newParticipants = participants.map(el => parseInt(el.ticket) === parseInt(what[1]) ? { ...el, isWinner: true } : el
-        );
-        setParticipants(newParticipants);
+        const id = winners.length + 1;
+        const newWinners = winners;
+        newWinners.push({
+            id,
+            time: parseInt(when),
+            address: what[0],
+            ticket: parseInt(what[1]),
+        });
+        setWinners([...newWinners]);
     };
 
     const log = async ({ when, what }) => {
@@ -190,13 +195,9 @@ const ReachContextProvider = ({ children }) => {
             case ifState('timeout'):
                 await alertThis(`The normal draw window has timed out, yet tickets remain, increasing price by 25%!`);
                 break;
-            case ifState('closed'):
-                await sleep(5000);
-                await alertThis(`The raffle has ended, proceeding to reveal!`);
-                break;
             case ifState('complete'):
                 await sleep(5000);
-                await alertThis(`Round ${round} has ended!${what[1] ? ` Round ${round + 1} would begin shortly` : ''}`);
+                await alertThis(`This round has ended!${what[1] ? ` The next would begin shortly` : ''}`);
                 setCanContinue(what[1]);
                 break;
             case ifState('closing'):
@@ -216,8 +217,6 @@ const ReachContextProvider = ({ children }) => {
     const updateBalance = ({ when, what }) => {
         setBalance(reach.formatCurrency(what[0], 4));
         if (isConcluded && canContinue) {
-            const newParticipants = [];
-            setParticipants([...newParticipants]);
             setHasPurchased(false);
             setIsConcluded(false);
             setIsOpen(true);
@@ -328,6 +327,7 @@ const ReachContextProvider = ({ children }) => {
         selectDeployer,
         selectAttacher,
         sortArrayOfObjects,
+        winners,
 
         deploy,
         attach,
