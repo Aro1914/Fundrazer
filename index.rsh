@@ -1,3 +1,4 @@
+/* eslint-disable no-loop-func */
 /* eslint-disable no-use-before-define */
 /* eslint-disable no-array-constructor */
 /* eslint-disable no-unused-vars */
@@ -21,9 +22,11 @@ const winner = (winningTicket, pickedTicket) => {
 export const main = Reach.App(() => {
 
   const Deployer = Participant('Deployer', {
-    setContractTerms: Fun([], Array(UInt, 2)),
-    genTickets: Fun([UInt], tickets),
-    genWinningTicket: Fun([tickets], ticketIndex),
+    setupContract: Fun([], Array(UInt, 3)),
+    generate: Fun([UInt], Object({
+      generatedTickets: tickets,
+      winningIndex: ticketIndex,
+    }))
   });
 
   const Players = API('Players', {
@@ -31,96 +34,121 @@ export const main = Reach.App(() => {
   });
 
   const Logger = Events({
-    log: [state],
+    log: [state, Bool],
+    price: [UInt],
     notify: [Address, UInt],
+    round: [UInt],
+    balance: [UInt],
     announce: [Address, UInt],
   });
 
   init();
-  Deployer.publish();
-  Logger.log(state.pad("initiating"));
-
   Deployer.only(() => {
-    const [deadline, paymentAmount] = declassify(interact.setContractTerms());
-    const generatedTickets = declassify(interact.genTickets(numOfTickets));
-    const winningIndex = declassify(interact.genWinningTicket(generatedTickets));
+    const [deadline, paymentAmount, target] = declassify(interact.setupContract());
   });
-  Deployer.publish(deadline, generatedTickets, winningIndex, paymentAmount);
+  Deployer.publish(deadline, paymentAmount, target);
+  Logger.log(state.pad("initiating"), false);
   commit();
   Deployer.publish();
 
-  const [timeRemaining, keepGoing] = makeDeadline(deadline);
-  Logger.log(state.pad("opened"));
+  var [rounds, currentBal, totalGathered] = [1, balance(), 0];
+  invariant(balance() == currentBal);
+  while (totalGathered < target) {
+    commit();
 
-  const [
-    outcome,
-    currentOwner,
-    currentBalance,
-    playerCount
-  ] = parallelReduce([LOST, Deployer, balance(), 0])
-    .invariant(balance() == currentBalance)
-    .while(keepGoing() && playerCount < 5)
-    .api_(Players.drawATicket, () => {
-      return [paymentAmount,
-        (notify) => {
-          const ticketNumber = generatedTickets[playerCount];
-          const winningNumber = generatedTickets[(winningIndex > 4 ? 0 : winningIndex)];
-          const isWinner = winner(winningNumber, ticketNumber) ? WON : LOST;
-          const currentHolder = isWinner ? this : currentOwner;
-          notify(ticketNumber);
-          Logger.notify(this, ticketNumber);
-          return [isWinner, currentHolder, currentBalance + paymentAmount, playerCount + 1];
-        }
-      ];
-    })
-    .timeout(timeRemaining(), () => {
-      Deployer.publish();
-      Logger.log(state.pad("timeout"));
-      if (playerCount < 5) {
-        commit();
-        Deployer.publish();
-        const increasedPayment = ((paymentAmount / 100) * 25);
-        const [
-          tOutcome,
-          tCurrentOwner,
-          tCurrentBalance,
-          tPlayerCount
-        ] = parallelReduce([outcome, currentOwner, currentBalance, playerCount])
-          .invariant(balance() == tCurrentBalance)
-          .while(tPlayerCount < 5)
-          .api_(Players.drawATicket, () => {
-            return [increasedPayment,
-              (notify) => {
-                const ticketNumber = generatedTickets[tPlayerCount];
-                const winningNumber = generatedTickets[(winningIndex > 4 ? 0 : winningIndex)];
-                const isWinner = winner(winningNumber, ticketNumber) ? WON : LOST;
-                const currentHolder = isWinner ? this : tCurrentOwner;
-                notify(ticketNumber);
-                Logger.notify(this, ticketNumber);
-                return [isWinner, currentHolder, tCurrentBalance + increasedPayment, tPlayerCount + 1];
-              }
-            ];
-          });
-        return [
-          tOutcome,
-          tCurrentOwner,
-          tCurrentBalance,
-          tPlayerCount
-        ];
-      } else {
-        return [
-          outcome,
-          currentOwner,
-          currentBalance,
-          playerCount
-        ];
-      }
+    Deployer.only(() => {
+      const { generatedTickets, winningIndex } = declassify(interact.generate(numOfTickets));
     });
-  Logger.log(state.pad("closed"));
-  Logger.announce(currentOwner, generatedTickets[(winningIndex > 4 ? 0 : winningIndex)]);
-  transfer(balance()).to(currentOwner);
-  Logger.log(state.pad("complete"));
-  Logger.log(state.pad("closing"));
+    Deployer.publish(generatedTickets, winningIndex);
+
+    const [timeRemaining, keepGoing] = makeDeadline(deadline);
+    Logger.log(state.pad("opened"), false);
+    Logger.price(paymentAmount);
+    Logger.round(rounds);
+
+    const [
+      outcome,
+      currentOwner,
+      currentBalance,
+      playerCount,
+      amtCont,
+    ] = parallelReduce([LOST, Deployer, balance(), 0, 0])
+      .invariant(balance() == currentBalance)
+      .while(keepGoing() && playerCount < 5)
+      .api_(Players.drawATicket, () => {
+        return [paymentAmount,
+          (notify) => {
+            const ticketNumber = generatedTickets[playerCount];
+            const winningNumber = generatedTickets[(winningIndex > 4 ? 0 : winningIndex)];
+            const isWinner = winner(winningNumber, ticketNumber) ? WON : LOST;
+            const currentHolder = isWinner ? this : currentOwner;
+            notify(ticketNumber);
+            Logger.notify(this, ticketNumber);
+            return [isWinner, currentHolder, currentBalance + paymentAmount, playerCount + 1, amtCont + paymentAmount];
+          }
+        ];
+      })
+      .timeout(timeRemaining(), () => {
+        Deployer.publish();
+        Logger.log(state.pad("timeout"), false);
+        if (playerCount < 5) {
+          commit();
+          Deployer.publish();
+          const increasedPayment = ((paymentAmount / 100) * 125);
+          Logger.price(increasedPayment);
+          const [
+            tOutcome,
+            tCurrentOwner,
+            tCurrentBalance,
+            tPlayerCount,
+            tAmtCont
+          ] = parallelReduce([outcome, currentOwner, currentBalance, playerCount, amtCont])
+            .invariant(balance() == tCurrentBalance)
+            .while(tPlayerCount < 5)
+            .api_(Players.drawATicket, () => {
+              return [increasedPayment,
+                (notify) => {
+                  const ticketNumber = generatedTickets[tPlayerCount];
+                  const winningNumber = generatedTickets[(winningIndex > 4 ? 0 : winningIndex)];
+                  const isWinner = winner(winningNumber, ticketNumber) ? WON : LOST;
+                  const currentHolder = isWinner ? this : tCurrentOwner;
+                  notify(ticketNumber);
+                  Logger.notify(this, ticketNumber);
+                  return [isWinner, currentHolder, tCurrentBalance + increasedPayment, tPlayerCount + 1, tAmtCont + increasedPayment];
+                }
+              ];
+            });
+          return [
+            tOutcome,
+            tCurrentOwner,
+            tCurrentBalance,
+            tPlayerCount,
+            tAmtCont,
+          ];
+        } else {
+          return [
+            outcome,
+            currentOwner,
+            currentBalance,
+            playerCount,
+            amtCont,
+          ];
+        }
+      });
+    Logger.log(state.pad("closed"), false);
+    Logger.announce(currentOwner, generatedTickets[(winningIndex > 4 ? 0 : winningIndex)]);
+    if (balance() >= amtCont / 2) {
+      transfer(amtCont / 2).to(currentOwner);
+    }
+    // transfer(balance()).to(Deployer);
+    Logger.log(state.pad("complete"), balance() < target);
+    Logger.balance(totalGathered + (amtCont / 2));
+
+    [rounds, currentBal, totalGathered] = [(rounds + 1), balance(), totalGathered + (amtCont / 2)];
+    continue;
+  }
+  transfer(balance()).to(Deployer);
+  Logger.log(state.pad("closing"), false);
   commit();
   exit();
 });

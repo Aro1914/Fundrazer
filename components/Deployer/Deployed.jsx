@@ -2,7 +2,7 @@ import React from "react";
 import { useReach, useClasses } from "../../hooks";
 import styles from "../../styles/Global.module.css";
 
-const sleep = (milliseconds) =>
+const sleep = async (milliseconds) =>
     new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 const Deployed = () => {
@@ -26,7 +26,7 @@ const Deployed = () => {
             <button className={ useClasses(styles.actionButton) } onClick={ (e) => copyToClipboard(e.currentTarget.value) }>
                 Copy to clipboard
             </button>
-            <button className={ useClasses(styles.actionButton) } onClick={ () => setViews({views: 'Participants', wrapper: 'DeployerWrapper'}) }>
+            <button className={ useClasses(styles.actionButton) } onClick={ () => setViews({view: 'Participants', wrapper: 'AppWrapper'}) }>
                 Continue to Raffle View
             </button>
         </div>

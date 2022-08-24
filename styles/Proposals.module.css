@@ -1,0 +1,122 @@
+.container {
+  width: max(70%, 300px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 5px;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.title {
+  width: 100%;
+  margin:0;
+  text-align: center;
+}
+
+.proposals {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 5px;
+  flex-direction: column;
+  gap: 5px;
+  border-radius: 5px;
+  border: 1px solid white;
+}
+
+.proposal {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+}
+
+.proposal:not(.proposal:last-of-type) {
+  border-bottom: 0.5px solid white;
+}
+
+.identifiers {
+  width: fit-content;
+  padding: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  overflow: hidden;
+  gap: 5px;
+}
+
+.time {
+  padding: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.address {
+  padding: 2px;
+  display: flex;
+  min-width: 200px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.ticket {
+  padding: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.winner {
+  color: rgb(0, 255, 0) !important;
+}
+
+.loser {
+  color: rgb(215, 64, 64) !important;
+}
+
+.buttonBox {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  flex-wrap: wrap;
+}
+
+.button {
+  composes: choices from "./Terms.module.css";
+  composes: positive from "./Terms.module.css";
+  width: fit-content;
+  padding: 5px 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.littleText {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+}
+
+.disabled {
+  composes: choices from "./Terms.module.css";
+  composes: negative from "./Terms.module.css";
+  border-color: #fff;
+  color: #fff;
+}
+
+.disabled:hover {
+  transform: none;
+}

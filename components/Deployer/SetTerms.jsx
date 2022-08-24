@@ -3,7 +3,7 @@ import { useReach, useClasses } from "../../hooks";
 import styles from "../../styles/Global.module.css";
 
 const SetTerms = () => {
-    const { defaultPaymentAmount, defaultDeadline, standardUnit, setDeadline, setAmount, connector, finalizeTerms } = useReach();
+    const { defaultPaymentAmount, defaultDeadline, standardUnit, setDeadline, deadline, setAmount, amount, connector, finalizeTerms,setTarget,target } = useReach();
     return (
         <div className={ useClasses(styles.subContainer) }>
             <span className={ useClasses(styles.littleText) }>Set Ticket Price in { standardUnit }</span>
@@ -11,19 +11,35 @@ const SetTerms = () => {
                 className={ useClasses(styles.fields) }
                 type="number"
                 placeholder={ defaultPaymentAmount }
-                onChange={ (e) => setAmount(e.currentTarget.value) }
-                autofocus
+                onChange={ (e) => {
+                    setAmount(e.currentTarget.value);
+                } }
+                autoFocus
             />
-            <span className={ useClasses(styles.littleText) }>Set Deadline in consensus Blocks</span>
-            <span className={ useClasses(styles.littleText) }>Currently on the { connector } network</span>
+            <span className={ useClasses(styles.littleText) }>Set Deadline in Blocks <br />Currently on the { connector } network</span>
             <input
                 className={ useClasses(styles.fields) }
                 type="number"
                 placeholder={ defaultDeadline }
-                onChange={ (e) => setDeadline(e.currentTarget.value) }
-                autofocus
+                onChange={ (e) => {
+                    setDeadline(e.currentTarget.value);
+                } }
             />
-            <button className={ useClasses(styles.actionButton) } onClick={ () => finalizeTerms() }>Set Terms</button>
+            <span className={ useClasses(styles.littleText) }>Whats the target you want to raise?</span>
+            <input
+                className={ useClasses(styles.fields) }
+                type="number"
+                placeholder={ `In ${standardUnit}` }
+                onChange={ (e) => {
+                    setTarget(e.currentTarget.value);
+                } }
+            />
+            <button className={ useClasses(styles.actionButton) }
+                onClick={ () => {
+                    finalizeTerms(deadline, amount,target);
+                } }>
+                Set Terms
+            </button>
         </div>
     );
 };

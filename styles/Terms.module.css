@@ -1,0 +1,96 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.titleBox {
+  background-image: url("../public/images/terms.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  height: 200px;
+  justify-content: center;
+  align-items: center;
+}
+
+.innerTitleBox {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 13, 255, 0.297);
+}
+
+.title {
+}
+
+.termsBox {
+  /* height: 400px; */
+  width: 100%;
+  overflow: auto;
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  flex-direction: column;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.innerTermsBox {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.terms {
+  text-align: left !important;
+  padding: 0;
+  margin: 0;
+}
+
+.choiceBox {
+  background-color: transparent;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 10px 5px;
+  width: 100%;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.choices {
+  padding: 5px;
+  margin: 5px 0;
+  font-size: 16px;
+  width: 200px;
+  border-radius: 5px;
+  border: 1px solid var(--reachBlue);
+}
+
+.choices:hover {
+  transform: scale(1.05, 1.05);
+}
+
+.positive {
+  background-color: var(--reachBlue);
+  color: #000;
+}
+
+.negative {
+  background-color: #000;
+  color: var(--reachBlue);
+}

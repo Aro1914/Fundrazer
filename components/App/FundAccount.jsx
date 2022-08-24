@@ -8,8 +8,14 @@ const FundAccount = () => {
 
     return (
         <div className={ useClasses(styles.subContainer) }>
-            <h2 className={ useClasses() }>Fund account</h2>
-            <h3 className={ useClasses() }>Balance: { user.balance } { standardUnit }</h3>
+            <h2 className={ useClasses(
+                styles.widthMax,
+                styles.flat,
+            ) }>Fund account</h2>
+            <h3 className={ useClasses(
+                styles.widthMax,
+                styles.flat,
+            ) }>Balance: { user.balance } { standardUnit }</h3>
 
             <h4 className={ useClasses(styles.miniHeader) }>
                 Would you like to fund your account with additional { standardUnit }?

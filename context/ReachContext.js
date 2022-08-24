@@ -4,6 +4,8 @@ import {
     ALGO_MyAlgoConnect as MyAlgoConnect,
 } from "@reach-sh/stdlib";
 import * as backend from "../build/index.main.mjs";
+import { useClasses as fmtClasses } from '../hooks/useClasses';
+import styles from '../styles/Global.module.css';
 const reach = loadStdlib(process.env);
 
 reach.setWalletFallback(
@@ -18,6 +20,7 @@ const { standardUnit } = reach;
 export const ReachContext = React.createContext();
 
 const ReachContextProvider = ({ children }) => {
+
     const [defaults] = useState({
         defaultPaymentAmount: 0.8,
         defaultDeadline: { ETH: 100, ALGO: 1000, CFX: 10000 }[reach.connector],
@@ -33,65 +36,88 @@ const ReachContextProvider = ({ children }) => {
         balance: "",
     });
 
-    const [who, setWho] = useState("");
-
     const [contract, setContract] = useState(null);
-    const [events, setEvents] = useState(null);
 
-    const [deadline, setdeadline] = useState(defaults.defaultDeadline);
+    const [isDeployer, setIsDeployer] = useState(false);
+    const [deadline, setDeadline] = useState(defaults.defaultDeadline);
     const [amount, setAmount] = useState(defaults.defaultPaymentAmount);
+    const [target, setTarget] = useState(0);
     const [terms, setTerms] = useState([deadline, amount]);
-    const [resolveTerms, setResolveTerms] = useState({});
+    const [isConcluded, setIsConcluded] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [hasPurchased, setHasPurchased] = useState(false);
 
-    const [deployerContract, setDeployerContract] = useState(null);
+    const [resolveTerms, setResolveTerms] = useState({});
+    const [round, setRound] = useState(1);
 
     const [attacherContract, setAttacherContract] = useState(null);
     const [resolveAcceptTerms, setResolveAcceptTerms] = useState({});
+    const [participants, setParticipants] = useState([]);
+
+    const [message, setMessage] = useState('');
+    const [showAlert, setShowAlert] = useState(false);
+
+    const [alertResolve, setAlertResolve] = useState({});
+
+    const [canContinue, setCanContinue] = useState(false);
+    const [balance, setBalance] = useState(0);
+
+    const sleep = (milliseconds) => new Promise((resolve) => {
+        setAlertResolve({ resolve });
+        return setTimeout(resolve, milliseconds);
+    });
+
+    const cancelAlert = () => {
+        alertResolve.resolve();
+    };
+
+    const alertThis = async (message) => {
+        setMessage(message);
+        setShowAlert(true);
+        await sleep(message.length * 200);
+        setShowAlert(false);
+        setMessage('');
+    };
+
+    const sortArrayOfObjects = (arrayOfObjects, property) => {
+        if (!arrayOfObjects) return arrayOfObjects;
+        if (!Array.isArray(arrayOfObjects)) return arrayOfObjects;
+        if (arrayOfObjects.length <= 1) return arrayOfObjects;
+        let isInt = false;
+        return arrayOfObjects.map((el, index) => {
+            isInt = !isNaN(el?.[property]);
+            return !isInt ?
+                `${el?.[property]?.[0]?.toUpperCase()?.concat(el?.[property]?.slice(1))}^-.-^${index}` :
+                `${el?.[property]}^-.-^${index}`;
+        })?.sort(isInt ? (a, b) => Number(a?.split('^-.-^')?.[0]) - Number(b?.split('^-.-^')?.[0]) : undefined)?.map(el => arrayOfObjects[el?.split('^-.-^')?.[1]]);
+    };
 
     const connectAccount = async () => {
         const account = await reach.getDefaultAccount();
         const balAtomic = await reach.balanceOf(account);
         const balance = reach.formatCurrency(balAtomic, 4);
         setUser({ account, balance });
-        if (await reach.canFundFromFaucet) {
-            setViews({ view: "FundAccount" });
-        } else {
-            setViews({ view: "DeployerOrAttacher", wrapper: "AppWrapper" });
-        }
-    };
-
-    const fundAccount = async (fundAmount) => {
-        await reach.fundFromFaucet(user.account, reach.parseCurrency(fundAmount));
-        setViews({ view: "DeployerOrAttacher" });
-    };
-
-    const skipFundAccount = async () => {
         setViews({ view: "DeployerOrAttacher", wrapper: "AppWrapper" });
     };
 
     const selectAttacher = () => {
-        setViews({ view: "Attach", wrapper: "AttacherWrapper" });
+        setViews({ view: "Attach", wrapper: "AppWrapper" });
     };
 
-    const selectDeployer = () => {
-        setViews({ view: "SetTerms", wrapper: "DeployerWrapper" });
-    };
-
-    const informTimeout = () => {
-        setViews({ view: "Timeout", wrapper: "AppWrapper" });
-    };
-
-    const setContractTerms = async () => {
-        const terms = await new Promise((resolveTerms) => {
-            setResolveTerms({ resolveTerms });
-            setViews({ view: "SetTerms", wrapper: "DeployerWrapper" });
+    const setupContract = async () => {
+        const terms = await new Promise((resolve) => {
+            setViews({ view: "SetTerms", wrapper: "AppWrapper" });
+            setResolveTerms({ resolve });
         });
-        return [terms[0], reach.parseCurrency(terms[1])];
+        setTerms(terms);
+        console.log(terms);
+
+        setViews({ view: "Participants", wrapper: "AppWrapper" });
+        return [terms[0], reach.parseCurrency(terms[1]), reach.parseCurrency(terms[2])];
     };
 
-    const finalizeTerms = () => {
-        resolveTerms.resolveTerms(terms);
-        setViews({ view: "Participants", wrapper: "DeployerWrapper" });
+    const finalizeTerms = (deadline, amount, target) => {
+        resolveTerms.resolve([deadline, amount, target]);
     };
 
     const genTickets = (num) => {
@@ -111,57 +137,111 @@ const ReachContextProvider = ({ children }) => {
         return Math.floor(Math.random() * tickets.length);
     };
 
+    const generate = (num) => {
+        const generatedTickets = genTickets(num);
+
+        const winningIndex = genWinningTicket(generatedTickets);
+
+        return {
+            generatedTickets,
+            winningIndex,
+        };
+    };
+
     const DeployerInteract = {
-        setContractTerms,
-        genTickets,
-        genWinningTicket
+        setupContract,
+        generate,
     };
 
     const notify = ({ when, what }) => {
-        alert(`User with address ${what[0]}, just bought ticket number ${what[1]}`);
+        const id = participants.length + 1;
+        const newParticipants = participants;
+        newParticipants.push({
+            id,
+            time: parseInt(when),
+            address: what[0],
+            ticket: parseInt(what[1]),
+            isWinner: false,
+        });
+        setParticipants([...newParticipants]);
     };
 
-    const announce = ({ when, what }) => {
-        alert(`Congratulations, user with address ${what[0]}, the holder of ticket number ${what[1]}, you just won the pot!`);
+    const announce = async ({ when, what }) => {
+        await sleep(5000);
+        await alertThis(`Congratulations, user with address ${what[0]}, the holder of ticket number ${what[1]}, you just won the pot!`);
+        setIsConcluded(true);
+        const newParticipants = participants.map(el => parseInt(el.ticket) === parseInt(what[1]) ? { ...el, isWinner: true } : el
+        );
+        setParticipants(newParticipants);
     };
 
-    const log = ({ when, what }) => {
+    const log = async ({ when, what }) => {
         const paddedState = what[0];
-        const ifState = x => x.padEnd(15, "\u0000");
+        const ifState = x => x.padEnd(20, "\u0000");
         switch (paddedState) {
             case ifState('initiating'):
-                alert(`Initiating contract operations!`);
+                await alertThis(`Initiating contract operations!`);
                 break;
             case ifState('opened'):
-                alert(`The normal draw window has opened!`);
+                await alertThis(`The normal draw window has opened!`);
+                setIsOpen(true);
+                setHasPurchased(false);
                 break;
             case ifState('timeout'):
-                alert(`The normal draw window has timed out, yet tickets remain, increasing price by 25%!`);
+                await alertThis(`The normal draw window has timed out, yet tickets remain, increasing price by 25%!`);
                 break;
             case ifState('closed'):
-                alert(`The normal draw window is closed, proceeding to payout!`);
+                await sleep(5000);
+                await alertThis(`The raffle has ended, proceeding to reveal!`);
                 break;
             case ifState('complete'):
-                alert(`The operations are complete!`);
+                await sleep(5000);
+                await alertThis(`Round ${round} has ended!${what[1] ? ` Round ${round + 1} would begin shortly` : ''}`);
+                setCanContinue(what[1]);
                 break;
             case ifState('closing'):
-                alert(`The contract is closing!`);
+                await sleep(5000);
+                await alertThis(`The contract is closing!`);
                 break;
             default:
-                alert(`An unhandled log...`);
+                await alertThis(`An unhandled log...`);
                 break;
         }
     };
 
-    const deploy = async () => {
-        const ctc = user.account.contract(backend);
-        setViews({ view: "Deploying", wrapper: "DeployerWrapper" });
-        setDeployerContract(ctc);
+    const updateRound = ({ when, what }) => {
+        setRound(parseInt(what[0]));
+    };
 
-        setEvents(ctc.events);
+    const updateBalance = ({ when, what }) => {
+        setBalance(reach.formatCurrency(what[0], 4));
+        if (isConcluded && canContinue) {
+            const newParticipants = [];
+            setParticipants([...newParticipants]);
+            setHasPurchased(false);
+            setIsConcluded(false);
+            setIsOpen(true);
+        }
+    };
+
+    const receivePrice = ({ when, what }) => {
+        setAmount(reach.formatCurrency(what[0], 4));
+    };
+
+    const assignMonitors = (events) => {
         events.log.monitor(log);
         events.notify.monitor(notify);
+        events.round.monitor(updateRound);
+        events.balance.monitor(updateBalance);
+        events.price.monitor(receivePrice);
         events.announce.monitor(announce);
+    };
+
+    const deploy = async () => {
+        const ctc = user.account.contract(backend);
+        setViews({ view: "Deploying", wrapper: "AppWrapper" });
+
+        assignMonitors(ctc.events);
 
         ctc.p.Deployer(DeployerInteract);
         const ctcInfoStr = JSON.stringify(await ctc.getInfo(), null, 2);
@@ -170,26 +250,29 @@ const ReachContextProvider = ({ children }) => {
         setViews({ ...views, view: "Deployed" });
     };
 
+    const selectDeployer = async () => {
+        setIsDeployer(true);
+        await deploy();
+    };
+
     const attach = async (ctcInfoStr) => {
         try {
-            setViews({ view: "Attaching", wrapper: "AttacherWrapper" });
+            setViews({ view: "Attaching", wrapper: "AppWrapper" });
             const ctc = user.account.contract(backend, JSON.parse(ctcInfoStr));
             setAttacherContract(ctc);
+            setContract({ ctcInfoStr });
 
             const termsAccepted = await new Promise((resolveAcceptTerms) => {
                 setResolveAcceptTerms({ resolveAcceptTerms });
-                setViews({ view: 'Terms', wrapper: 'AttacherWrapper' });
+                setViews({ view: 'Terms', wrapper: 'AppWrapper' });
             });
 
-            setEvents(ctc.events);
-            events.log.monitor(log);
-            events.notify.monitor(notify);
-            events.announce.monitor(announce);
+            assignMonitors(ctc.events);
 
             if (termsAccepted) {
-                setViews({ view: "BuyTicket", wrapper: 'AttacherWrapper' });
+                setViews({ view: "Participants", wrapper: 'AppWrapper' });
             } else {
-                setViews({ view: "Attach", wrapper: 'AttacherWrapper' });
+                setViews({ view: "Attach", wrapper: 'AppWrapper' });
                 setAttacherContract(null);
             }
         } catch (error) {
@@ -206,36 +289,45 @@ const ReachContextProvider = ({ children }) => {
     };
 
     const buyTicket = async () => {
+        setHasPurchased(true);
         try {
-            alert(`You just pulled out Ticket number ${await attacherContract.apis.Players.drawATicket()}`);
-            setViews({ view: 'Participants', wrapper: 'AttacherWrapper' });
+            await alertThis(`You just pulled out Ticket number ${await attacherContract.apis.Players.drawATicket()}`);
         } catch (error) {
-            alert(`An error occurred`);
+            await alertThis(`An error occurred`);
+            setHasPurchased(false);
         }
     };
-
-    // const fmt = x => reach.formatCurrency(x, 4);
-    // const getBalance = async () => fmt(await reach.balanceOf(user.account));
 
     const ReachContextValues = {
         ...defaults,
 
-        contract: contract,
+        contract,
+        deadline,
+        amount,
 
         user,
         views,
         setViews,
-        fundAccount,
         connectAccount,
-        skipFundAccount,
-
+        terms,
         setTerms,
-        informTimeout,
+        setAmount,
+        setTarget,
+        target,
+        setDeadline,
+        resolveTerms,
+        isConcluded,
+        isOpen,
+        round,
+        canContinue,
+
+        participants,
+        isDeployer,
+        hasPurchased,
 
         selectDeployer,
         selectAttacher,
-        who,
-        setWho,
+        sortArrayOfObjects,
 
         deploy,
         attach,
@@ -243,10 +335,35 @@ const ReachContextProvider = ({ children }) => {
         termsRejected,
         buyTicket,
         finalizeTerms,
+        balance,
     };
 
     return (
         <ReachContext.Provider value={ ReachContextValues }>
+            { showAlert &&
+                <div className={ fmtClasses(
+                    styles.alertContainer,
+                ) }>
+                    <div className={ fmtClasses(
+                        styles.mask,
+                    ) }
+                        onClick={ cancelAlert }
+                    ></div>
+                    <div className={ fmtClasses(
+                        styles.alert,
+                    ) }>
+                        <div
+                            className={ fmtClasses(
+                                styles.cancel,
+                            ) }
+                            onClick={ cancelAlert }
+                        ></div>
+                        <span className={ fmtClasses(
+                            styles.message,
+                        ) }>{ message }</span>
+                    </div>
+                </div>
+            }
             { children }
         </ReachContext.Provider>
     );
