@@ -4,7 +4,7 @@ import styles from '../../styles/Proposals.module.css';
 
 
 const Participants = () => {
-    const { participants, sortArrayOfObjects, isConcluded, buyTicket, isDeployer, isOpen, amount, standardUnit, hasPurchased, round, balance, target, winners } = useReach();
+    const { participants, sortArrayOfObjects, buyTicket, isDeployer, isOpen, amount, standardUnit, hasPurchased, round, balance, target, winners, contractEnd } = useReach();
 
     return (
         <div className={ useClasses(
@@ -12,7 +12,7 @@ const Participants = () => {
         ) }>
             <h1 className={ useClasses(
                 styles.title,
-            ) }>Participants (Round { round })</h1>
+            ) }>{ contractEnd ? `Contract Closed` : `Participants (Round ${round})` }</h1>
             <div className={ useClasses(
                 styles.proposals,
             ) }>
@@ -59,23 +59,27 @@ const Participants = () => {
                         })
                 }
             </div>
-            { !hasPurchased &&
+            { !contractEnd &&
                 <>
-                    { !isDeployer &&
-                        <div className={ fmtClasses(
-                            styles.buttonBox,
-                        ) }>
-                            { !isOpen && <span className={ fmtClasses(
-                                styles.littleText,
-                            ) }>The raffle window isn't open yet.</span> }
-                            <button
-                                className={ fmtClasses(
-                                    isOpen ? styles.button : styles.disabled,
-                                ) }
-                                onClick={ buyTicket }
-                                disabled={ !isOpen }
-                            >{ isOpen ? `Buy Ticket at ${amount} ${standardUnit}` : 'Please wait...' }</button>
-                        </div>
+                    { !hasPurchased &&
+                        <>
+                            { !isDeployer &&
+                                <div className={ fmtClasses(
+                                    styles.buttonBox,
+                                ) }>
+                                    { !isOpen && <span className={ fmtClasses(
+                                        styles.littleText,
+                                    ) }>The raffle window isn't open yet.</span> }
+                                    <button
+                                        className={ fmtClasses(
+                                            isOpen ? styles.button : styles.disabled,
+                                        ) }
+                                        onClick={ buyTicket }
+                                        disabled={ !isOpen }
+                                    >{ isOpen ? `Buy Ticket at ${amount} ${standardUnit}` : 'Please wait...' }</button>
+                                </div>
+                            }
+                        </>
                     }
                 </>
             }

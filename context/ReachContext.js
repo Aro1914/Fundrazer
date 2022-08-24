@@ -62,6 +62,19 @@ const ReachContextProvider = ({ children }) => {
 
     const [canContinue, setCanContinue] = useState(false);
     const [balance, setBalance] = useState(0);
+    const [contractEnd, setContractEnd] = useState(false);
+
+    const reset = () => {
+        setIsConcluded(false);
+        setIsOpen(false);
+        setHasPurchased(false);
+        setRound(1);
+        setParticipants([]);
+        setWinners([]);
+        setMessage('');
+        setBalance(0);
+        setContractEnd(false);
+    };
 
     const sleep = (milliseconds) => new Promise((resolve) => {
         setAlertResolve({ resolve });
@@ -204,6 +217,7 @@ const ReachContextProvider = ({ children }) => {
             case ifState('closing'):
                 await sleep(5000);
                 await alertThis(`The contract is closing!`);
+                setContractEnd(true);
                 break;
             default:
                 await alertThis(`An unhandled log...`);
@@ -247,6 +261,7 @@ const ReachContextProvider = ({ children }) => {
         const ctcInfoStr = JSON.stringify(await ctc.getInfo(), null, 2);
         console.log(ctcInfoStr);
         setContract({ ctcInfoStr });
+        reset();
         setViews({ ...views, view: "Deployed" });
     };
 
@@ -270,6 +285,7 @@ const ReachContextProvider = ({ children }) => {
             assignMonitors(ctc.events);
 
             if (termsAccepted) {
+                reset();
                 setViews({ view: "Participants", wrapper: 'AppWrapper' });
             } else {
                 setViews({ view: "Attach", wrapper: 'AppWrapper' });
@@ -329,6 +345,7 @@ const ReachContextProvider = ({ children }) => {
         selectAttacher,
         sortArrayOfObjects,
         winners,
+        contractEnd,
 
         deploy,
         attach,
