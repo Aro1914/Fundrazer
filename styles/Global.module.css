@@ -204,6 +204,7 @@ button {
   background-color: #fff;
   border: 3px solid var(--reachBlue);
   border-radius: 10px;
+  max-width: max(50%, 250px);
   text-align: center;
   display: flex;
   justify-content: center;

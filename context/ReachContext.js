@@ -182,7 +182,9 @@ const ReachContextProvider = ({ children }) => {
     const announce = async ({ when, what }) => {
         await sleep(5000);
         await alertThis(`Congrats, user with ticket number ${what[1]}, you just won half the pot!`);
+        what[2] ? await alertThis(`'The next round would begin shortly'`) : await alertThis(`The targeted amount has been raised, transferring contract balance of ${balance} ${standardUnit} to deployer and closing contract`);
         setIsConcluded(true);
+        setCanContinue(what[2]);
         const id = winners.length + 1;
         const newWinners = winners;
         newWinners.push({
@@ -208,11 +210,6 @@ const ReachContextProvider = ({ children }) => {
                 break;
             case ifState('timeout'):
                 await alertThis(`The normal draw window has timed out, yet tickets remain, increasing price by 25%!`);
-                break;
-            case ifState('complete'):
-                await sleep(5000);
-                await alertThis(`This round has ended!${what[1] ? ` The next would begin shortly` : ''}`);
-                setCanContinue(what[1]);
                 break;
             case ifState('closing'):
                 await sleep(5000);
@@ -307,9 +304,9 @@ const ReachContextProvider = ({ children }) => {
     const buyTicket = async () => {
         setHasPurchased(true);
         try {
-            await alertThis(`You just pulled out Ticket number ${await attacherContract.apis.Players.drawATicket()}`);
+            await alertThis(`You just pulled out ticket number ${await attacherContract.apis.Players.drawATicket()}`);
         } catch (error) {
-            await alertThis(`An error occurred`);
+            await alertThis(`Sorry couldn't process purchase, possibly due to a timeout. Retry in a few seconds.`);
             setHasPurchased(false);
         }
     };

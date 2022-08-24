@@ -39,7 +39,7 @@ export const main = Reach.App(() => {
     notify: [Address, UInt],
     round: [UInt],
     balance: [UInt],
-    announce: [Address, UInt],
+    announce: [Address, UInt, Bool],
   });
 
   init();
@@ -135,12 +135,11 @@ export const main = Reach.App(() => {
           ];
         }
       });
-    Logger.announce(currentOwner, generatedTickets[(winningIndex > 4 ? 0 : winningIndex)]);
     if (balance() >= amtCont / 2) {
       transfer(amtCont / 2).to(currentOwner);
     }
-    Logger.log(state.pad("complete"), (balance() < target ? true : false));
     Logger.balance(totalGathered + (amtCont / 2));
+    Logger.announce(currentOwner, generatedTickets[(winningIndex > 4 ? 0 : winningIndex)], (balance() < target ? true : false));
 
     [rounds, currentBal, totalGathered] = [(rounds + 1), balance(), totalGathered + (amtCont / 2)];
     continue;

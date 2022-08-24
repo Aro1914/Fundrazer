@@ -1,4 +1,4 @@
-# Aro Fundraiser
+# Fundrazer
 
 A DApp for fundraising purposes, be it for charity, generating business capital, sponsorship or crowd funding.
 
