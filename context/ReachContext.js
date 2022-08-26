@@ -271,20 +271,19 @@ const ReachContextProvider = ({ children }) => {
 
     const attach = async (ctcInfoStr) => {
         try {
-            setViews({ view: "Attaching", wrapper: "AppWrapper" });
-            const ctc = user.account.contract(backend, JSON.parse(ctcInfoStr));
-            setAttacherContract(ctc);
-            setContract({ ctcInfoStr });
-
             const termsAccepted = await new Promise((resolveAcceptTerms) => {
                 setResolveAcceptTerms({ resolveAcceptTerms });
                 setViews({ view: 'Terms', wrapper: 'AppWrapper' });
             });
 
-            assignMonitors(ctc.events);
 
             if (termsAccepted) {
                 reset();
+                setViews({ view: "Attaching", wrapper: "AppWrapper" });
+                const ctc = user.account.contract(backend, JSON.parse(ctcInfoStr));
+                setAttacherContract(ctc);
+                setContract({ ctcInfoStr });
+                assignMonitors(ctc.events);
                 setViews({ view: "Participants", wrapper: 'AppWrapper' });
             } else {
                 setViews({ view: "Attach", wrapper: 'AppWrapper' });
