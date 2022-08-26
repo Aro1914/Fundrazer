@@ -9,8 +9,8 @@ const DeployerOrAttacher = () => {
         <div className={ useClasses(styles.subContainer) }>
             <h2 className={ useClasses() }>Please select a role</h2>
             <div className={ useClasses(styles.orderContainer) }>
-                <button onClick={ () => selectDeployer() } className={ useClasses(styles.actionButton) } title="Set the wager, deploy the contract">Deployer</button>
-                <span className={ useClasses(styles.littleText) }>Set the wager, deploy the contract</span>
+                <button onClick={ () => selectDeployer() } className={ useClasses(styles.actionButton) } title="Set the terms, deploy the contract">Deployer</button>
+                <span className={ useClasses(styles.littleText) }>Set the terms, deploy the contract</span>
             </div>
             <div className={ useClasses(styles.orderContainer) }>
                 <button onClick={ () => selectAttacher() } className={ useClasses(styles.actionButton) } title="Attach to the Deployer's contract">Attacher</button>
