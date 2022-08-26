@@ -219,13 +219,7 @@ const ReachContextProvider = ({ children }) => {
             case ifState('timeout'):
                 await alertThis(`The normal draw window has timed out, yet tickets remain, increasing price by 25%!`);
                 break;
-            case ifState('closing'):
-                await sleep(5000);
-                await alertThis(`The contract is closing!`);
-                setContractEnd(true);
-                break;
             default:
-                await alertThis(`An unhandled log...`);
                 break;
         }
     };

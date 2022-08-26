@@ -145,7 +145,6 @@ export const main = Reach.App(() => {
     continue;
   }
   transfer(balance()).to(Deployer);
-  Logger.log(state.pad("closing"), false);
   commit();
   exit();
 });
