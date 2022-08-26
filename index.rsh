@@ -35,6 +35,7 @@ export const main = Reach.App(() => {
 
   const Logger = Events({
     log: [state, Bool],
+    logOpened: [state, UInt],
     price: [UInt],
     notify: [Address, UInt],
     round: [UInt],
@@ -62,7 +63,7 @@ export const main = Reach.App(() => {
     Deployer.publish(generatedTickets, winningIndex);
 
     const [timeRemaining, keepGoing] = makeDeadline(deadline);
-    Logger.log(state.pad("opened"), false);
+    Logger.logOpened(state.pad("opened"), deadline);
     Logger.price(paymentAmount);
     Logger.round(rounds);
 

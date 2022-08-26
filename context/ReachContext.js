@@ -189,6 +189,7 @@ const ReachContextProvider = ({ children }) => {
         } else {
             await sleep(5000);
             await alertThis(`The targeted amount has been raised, transferring contract balance of ${reach.formatCurrency(what[3], 4)} ${standardUnit} to deployer and closing contract`);
+            setContractEnd(true);
         }
 
         setIsConcluded(true);
@@ -212,7 +213,7 @@ const ReachContextProvider = ({ children }) => {
                 await alertThis(`Initiating contract operations!`);
                 break;
             case ifState('opened'):
-                await alertThis(`The normal draw window has opened!`);
+                await alertThis(`The normal draw window has opened! It will timeout after ${parseInt(what[1])} blocks. Current consensus time is at ${parseInt(when)} blocks.`);
                 setIsOpen(true);
                 setHasPurchased(false);
                 break;
@@ -243,6 +244,7 @@ const ReachContextProvider = ({ children }) => {
 
     const assignMonitors = (events) => {
         events.log.monitor(log);
+        events.logOpened.monitor(log);
         events.notify.monitor(notify);
         events.round.monitor(updateRound);
         events.balance.monitor(updateBalance);
