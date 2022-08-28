@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
     loadStdlib,
-    ALGO_MyAlgoConnect as MyAlgoConnect,
+    ALGO_WalletConnect as WalletConnect,
 } from "@reach-sh/stdlib";
 import * as backend from "../build/index.main.mjs";
 import { useClasses as fmtClasses } from '../hooks/useClasses';
@@ -11,7 +11,7 @@ const reach = loadStdlib(process.env);
 reach.setWalletFallback(
     reach.walletFallback({
         providerEnv: "TestNet",
-        MyAlgoConnect,
+        WalletConnect,
     })
 );
 
